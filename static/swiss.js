@@ -35,8 +35,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 		reloadPairings();
 	});
 
-	document.getElementById('addPairingsButton').addEventListener('click', function() {
-		addPairingsToMatches();
+	document.getElementById('addRandomPairingsButton').addEventListener('click', function() {
+		addRandomPairingsToMatches();
+	});
+	document.getElementById('addLPPairingsButton').addEventListener('click', function() {
+		addLPPairingsToMatches();
 	});
 
 });
@@ -105,7 +108,7 @@ function initialiseMatchesTable() {
 	}
 
 	const formatterNumber = (cell, row) => 
-		row.cells[row.cells.length - 1].data ? gridjs.html(`<input type="number" value="${cell}"/>`) : cell
+		row.cells[row.cells.length - 1].data ? gridjs.html(`<input type="number" min="0" value="${cell}"/>`) : cell
 
 	const formatterEdit = (_, row) => 
 		gridjs.html(`<button onclick="toggleEditSave(${row.rowIndex})">${row.cells[row.cells.length - 1].data ? 'Save' : 'Edit'}</button>`)
@@ -197,12 +200,25 @@ function initialiseMatchesTable() {
 	return grid
 }
 
-function addPairingsToMatches() {
-	return fetch('http://localhost:5000/get-pairings')
+function addRandomPairingsToMatches(url) {
+	return addPairingsToMatches('http://localhost:5000/get-pairings')
+}
+
+function addLPPairingsToMatches(url) {
+	return addPairingsToMatches('http://localhost:5000/get-pairings-lp')
+}
+
+function addPairingsToMatches(url) {
+	return fetch(url)
 		.then(response => response.json())
 		.then(async pairings => {
 			// console.log(pairings)
 			// pairings = [[p1Id, p2Id], ...]
+			if (!pairings) {
+				console.error("Error: Pairings unable to be retrieved.")
+				return
+			}
+
 			const data = []
 			for (pair of pairings) {
 				greatestMatchId++
@@ -235,6 +251,7 @@ function addPairingsToMatches() {
 			// }
 		});
 }
+
 
 function pairingsCallback(n, callback) {
 	let i = 0

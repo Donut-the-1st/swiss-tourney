@@ -10,7 +10,7 @@ def get_pairings():
 
 
 def get_pairings_random(n):
-    numbers = list(range(1, n + 1))
+    numbers = list(range(1, n + 1)) # start at 1
     random.shuffle(numbers)
     pairings = [(numbers[i], numbers[i + 1]) for i in range(0, len(numbers) - 1, 2)]
     if n % 2 != 0:
@@ -38,6 +38,10 @@ def get_pairings_lp(scores: np.ndarray, win_ratios: np.ndarray):
     res = opt.milp(c=score_deltas, constraints=constraints, integrality=integrality)
     pairs = list()
 
+    if not res.success:
+    	print("ERROR:", res.message)
+    	return None
+
     for i in range(len(possible_pairs)):
         if res.x[i] == 1:
             pairs.append(possible_pairs[i])
@@ -51,19 +55,3 @@ def lp_cost(pair, scores, games):
         delta += 1
     return delta
 
-
-if __name__ == '__main__':
-    from evaluate_calculation import *
-    from score_calculation import calculate_scores_from_matrix
-
-    player_strengths = np.random.rand(12)
-    player_strengths = player_strengths / np.linalg.norm(player_strengths)
-    new_matrix = np.zeros((len(player_strengths), len(player_strengths)))
-    pairings = get_pairings_random(12)
-    pairings = get_pairings_random(12)
-    games, outcomes = do_round(new_matrix, pairings, player_strengths)
-    calc_scores = calculate_scores_from_matrix(new_matrix)
-
-    print(pairings)
-    print(calc_scores)
-    print(get_pairings_lp(calc_scores, games))

@@ -20,62 +20,66 @@ def normalize_vector(v):
     return v / norm
 
 
-def power_iteration(matrix, iterations=1000, damping_factor=1-(1/12)**2):
+def power_iteration(matrix, iterations=100, damping_factor=0.85):
     """Compute the dominant eigenvector using the power iteration method."""
     n = matrix.shape[0]
-    b_k = np.random.rand(n)
+    # b_k = np.random.rand(n)
+    b_k = np.ones(n)
     b_k = normalize_vector(b_k)
 
-    for _ in range(iterations):
+    for i in range(iterations):
         # print(b_k)
         # Apply the damping factor
         b_k1 = (damping_factor * np.dot(matrix, b_k)) + ((1 - damping_factor) / n)
         b_k1 = normalize_vector(b_k1)
-        # Check convergence (optional)
+
+        # Check convergence
         if np.allclose(b_k, b_k1):
+            print("Converge:", i)
             return b_k1
 
         b_k = b_k1
 
+    print("Converge:", i)
     return b_k
 
 
 def transform_win_loss_ratio(A):
     """Turns number of wins and losses into percentage."""
-    A = np.array(A)
+    A = np.array(A).astype(float)
     A_transpose = A.T
-    A_plus_AT = A + A_transpose
-    # transformed_A = np.divide(A, A_plus_AT, out=np.zeros(A.shape), where=(A_plus_AT != 0))
-    # transformed_A = np.divide(A, A + A_transpose, where=(A + A_transpose != 0))
     transformed_A = np.divide(A, A + A_transpose, out=np.full_like(A, 0.5), where=(A + A_transpose) != 0)
-    # np.fill_diagonal(transformed_A, np.diag(A))
+    # transformed_A = np.divide(A, A + A_transpose, out=np.full_like(A, 0), where=(A + A_transpose) != 0)
     return transformed_A
 
 
 def calculate_scores(data, num_players, offset=0.01):
-    matrix = initialize_matrix(num_players)
-
-    for d in data:
-        update_matrix(matrix, *d)
-
+    matrix = get_matrix_from_matches(data, num_players)
     return calculate_scores_from_matrix(matrix, offset)
 
+def get_matrix_from_matches(matches, num_players):
+    matrix = initialize_matrix(num_players)
+    for d in matches:
+        update_matrix(matrix, *d)
+    return matrix
 
 def calculate_scores_from_matrix(matrix, offset=0.01, damping_factor=0.85):
+    matrix = np.array(matrix)
+
+    # print(matrix)
     matrix = transform_win_loss_ratio(matrix)
+    # print(matrix)
 
     # Normalise columns
     norms = np.linalg.norm(matrix, axis=0)
-
     np.divide(matrix, norms, out=matrix, where=(norms != 0))
-    if np.isnan(matrix).any():
-        breakpoint()
+
     # Normalise rows
     # norms = np.linalg.norm(matrix, axis=1)
     # np.divide(matrix, norms, out=matrix, where=(norms != 0))
 
     matrix += offset
-    rankings = power_iteration(matrix, damping_factor=1-(1/12)**2)
+    rankings = power_iteration(matrix, damping_factor=0.85)
     # print("Rankings:", rankings)
 
     return rankings

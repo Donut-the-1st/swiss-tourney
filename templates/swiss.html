@@ -28,12 +28,15 @@
 		    <h2>Matches</h2>
 		    <form id="addMatchForm">
 		        <select id="participant1Dropdown"></select>
-		        <input type="number" id="participant1Wins" placeholder="Participant 1 Wins" required>
+		        <input type="number" min="0" id="participant1Wins" placeholder="Participant 1 Wins" required>
 		        <select id="participant2Dropdown"></select>
-		        <input type="number" id="participant2Wins" placeholder="Participant 2 Wins" required>
+		        <input type="number" min="0" id="participant2Wins" placeholder="Participant 2 Wins" required>
 		        <button type="submit">Add Match</button>
 		    </form>
-		    <button id="addPairingsButton">Insert Pairings</button><br/><br/>
+		    Insert pairings:
+		    <button id="addRandomPairingsButton" class="pairing-button">Random</button>
+		    <button id="addChainPairingsButton" class="pairing-button" disabled>Chain</button>
+		    <button id="addLPPairingsButton" class="pairing-button">Linear Program</button><br/><br/>
 		    <div id="matchesTable" class="table"></div>
 		</div>
 

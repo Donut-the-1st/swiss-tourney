@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import csv
 import os
-from score_calculation import calculate_scores
-from pairings import get_pairings, get_pairings_random
+from score_calculation import calculate_scores, get_matrix_from_matches
+from pairings import get_pairings_random, get_pairings_lp
 
 app = Flask(__name__)
 CORS(app)
@@ -15,11 +15,14 @@ MATCHES_CSV = 'matches.csv'
 def create_csv_if_not_exists(file_path, fieldnames=[]):
     if not os.path.exists(file_path):
         with open(file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
+            # writer = csv.DictWriter(file, fieldnames=fieldnames)
+            # writer.writeheader()
+            print(fieldnames)
+            writer = csv.writer(file)
+            writer.writerow(fieldnames)
 
-create_csv_if_not_exists(PARTICIPANTS_CSV)
-create_csv_if_not_exists(MATCHES_CSV)
+create_csv_if_not_exists(PARTICIPANTS_CSV, ["id","name","score"])
+create_csv_if_not_exists(MATCHES_CSV, ["match_id","round_id","participant1_id","participant2_id","participant1_wins","participant2_wins"])
 
 def read_csv(file_path):
     data = []
@@ -183,19 +186,27 @@ def recalculate_scores():
 def get_pairings_this():
     participants = read_csv(PARTICIPANTS_CSV)
     return get_pairings_random(len(participants))
-    # participants = read_csv(PARTICIPANTS_CSV)
-    # matches = read_csv(MATCHES_CSV)
-    # match_data = [(
-    #     int(m['participant1_id']) - 1, 
-    #     int(m['participant2_id']) - 1, 
-    #     float(m['participant1_wins']), 
-    #     float(m['participant2_wins'])
-    # ) for m in matches]
 
-    # matrix = get_matrix(match_data, len(participants))
-    # scores = calculate_scores(match_data, len(participants))
-    # pairings = get_pairings(scores, matrix)
-    # return jsonify(pairings)
+@app.route('/get-pairings-lp', methods=['GET'])
+def get_pairings_lp_this():
+    participants = read_csv(PARTICIPANTS_CSV)
+    matches = read_csv(MATCHES_CSV)
+    match_data = [(
+        int(m['participant1_id']) - 1, 
+        int(m['participant2_id']) - 1, 
+        float(m['participant1_wins']), 
+        float(m['participant2_wins'])
+    ) for m in matches]
+
+    matrix = get_matrix_from_matches(match_data, len(participants))
+    scores = calculate_scores(match_data, len(participants))
+    print(matrix)
+    print(scores)
+    pairings = get_pairings_lp(scores, matrix)
+    if pairings is not None:
+        pairings = [(p[0]+1,p[1]+1) for p in pairings] # player ids at 1
+    return jsonify(pairings)
+
 
 
 @app.route('/')
