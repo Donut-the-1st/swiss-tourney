@@ -47,6 +47,7 @@ def get_pairings_lp(scores: np.ndarray, win_ratios: np.ndarray):
 
 def lp_cost(pair, scores, games):
     delta = abs(scores[pair[0]] - scores[pair[1]])
+    # If A has won against B, or B has won against A, make that match up less likely to occor
     if games[pair[0]][pair[1]] != 0 or games[pair[1]][pair[0]] != 0:
         delta += 1
     return delta
