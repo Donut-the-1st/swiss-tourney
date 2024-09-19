@@ -47,7 +47,7 @@ def get_pairings_lp(scores: np.ndarray, win_ratios: np.ndarray):
 
 def lp_cost(pair, scores, games):
     delta = abs(scores[pair[0]] - scores[pair[1]])
-    if games[pair[0]][pair[1]] != 0 and games[pair[0]][pair[1]] != 0.5:
+    if games[pair[0]][pair[1]] != 0 or games[pair[1]][pair[0]] != 0:
         delta += 1
     return delta
 
